@@ -348,23 +348,28 @@ const Dashboard = () => {
                 <div className="w-24 h-1.5 bg-policia-gold mx-auto mt-6 rounded-full"></div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {/* Noticia 1 */}
-                <div className={`rounded-xl overflow-hidden shadow-lg border transition-transform hover:-translate-y-1 hover:shadow-xl ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'}`}>
-                  <div className="h-48 bg-gray-300 relative overflow-hidden flex items-center justify-center">
-                    <span className="text-gray-500">[Imagen Noticia 1]</span>
+                <div className={`rounded-xl overflow-hidden shadow-lg border transition-transform hover:-translate-y-1 hover:shadow-xl flex flex-col ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'}`}>
+                  <div className={`h-48 relative overflow-hidden flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
+                    <AutoImage 
+                      baseName="/noticia1" 
+                      alt="Noticia 1" 
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      isDarkMode={isDarkMode}
+                    />
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 flex flex-col flex-grow">
                     <div className="flex items-center mb-3">
-                      <div className="w-4 h-4 rounded-full bg-policia-gold mr-2 shadow-inner"></div>
+                      <div className="w-4 h-4 rounded-full bg-policia-gold mr-2 shadow-inner shrink-0"></div>
                       <h4 className={`font-bold text-lg leading-tight uppercase ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                         Agasajo por el día del niño
                       </h4>
                     </div>
-                    <p className={`text-sm mb-4 line-clamp-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`text-sm mb-4 line-clamp-4 flex-grow ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Nuestros servidores policiales del Comando Policial El Alto compartieron una jornada llena de alegría y sonrisas junto a niñas y niños en la actividad Sanos y Seguros con Mi Policía.
                     </p>
-                    <div className={`flex justify-between items-center text-xs font-bold uppercase pt-4 border-t ${isDarkMode ? 'border-gray-800 text-gray-500' : 'border-gray-100 text-gray-400'}`}>
+                    <div className={`flex justify-between items-center text-xs font-bold uppercase pt-4 border-t mt-auto ${isDarkMode ? 'border-gray-800 text-gray-500' : 'border-gray-100 text-gray-400'}`}>
                       <span className="bg-policia-light text-policia-dark px-3 py-1 rounded-full">Actividades</span>
                       <span>Abril 12, 2026</span>
                     </div>
@@ -372,21 +377,26 @@ const Dashboard = () => {
                 </div>
 
                 {/* Noticia 2 */}
-                <div className={`rounded-xl overflow-hidden shadow-lg border transition-transform hover:-translate-y-1 hover:shadow-xl ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'}`}>
-                  <div className="h-48 bg-gray-300 relative overflow-hidden flex items-center justify-center">
-                    <span className="text-gray-500">[Imagen Noticia 2]</span>
+                <div className={`rounded-xl overflow-hidden shadow-lg border transition-transform hover:-translate-y-1 hover:shadow-xl flex flex-col ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'}`}>
+                  <div className={`h-48 relative overflow-hidden flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
+                    <AutoImage 
+                      baseName="/noticia2" 
+                      alt="Noticia 2" 
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      isDarkMode={isDarkMode}
+                    />
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 flex flex-col flex-grow">
                     <div className="flex items-center mb-3">
-                      <div className="w-4 h-4 rounded-full bg-policia-gold mr-2 shadow-inner"></div>
+                      <div className="w-4 h-4 rounded-full bg-policia-gold mr-2 shadow-inner shrink-0"></div>
                       <h4 className={`font-bold text-lg leading-tight uppercase ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                         Operativos contra el tráfico de fauna
                       </h4>
                     </div>
-                    <p className={`text-sm mb-4 line-clamp-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`text-sm mb-4 line-clamp-4 flex-grow ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       En el marco de la Orden de Operaciones "Protección a la Fauna Silvestre", nuestros efectivos realizaron patrullajes exhaustivos logrando la recuperación de especies en peligro.
                     </p>
-                    <div className={`flex justify-between items-center text-xs font-bold uppercase pt-4 border-t ${isDarkMode ? 'border-gray-800 text-gray-500' : 'border-gray-100 text-gray-400'}`}>
+                    <div className={`flex justify-between items-center text-xs font-bold uppercase pt-4 border-t mt-auto ${isDarkMode ? 'border-gray-800 text-gray-500' : 'border-gray-100 text-gray-400'}`}>
                       <span className="bg-policia-light text-policia-dark px-3 py-1 rounded-full">Operativos</span>
                       <span>Abril 5, 2026</span>
                     </div>
@@ -394,23 +404,55 @@ const Dashboard = () => {
                 </div>
 
                 {/* Noticia 3 */}
-                <div className={`rounded-xl overflow-hidden shadow-lg border transition-transform hover:-translate-y-1 hover:shadow-xl ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'}`}>
-                  <div className="h-48 bg-gray-300 relative overflow-hidden flex items-center justify-center">
-                    <span className="text-gray-500">[Imagen Noticia 3]</span>
+                <div className={`rounded-xl overflow-hidden shadow-lg border transition-transform hover:-translate-y-1 hover:shadow-xl flex flex-col ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'}`}>
+                  <div className={`h-48 relative overflow-hidden flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
+                    <AutoImage 
+                      baseName="/noticia3" 
+                      alt="Noticia 3" 
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      isDarkMode={isDarkMode}
+                    />
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 flex flex-col flex-grow">
                     <div className="flex items-center mb-3">
-                      <div className="w-4 h-4 rounded-full bg-policia-gold mr-2 shadow-inner"></div>
+                      <div className="w-4 h-4 rounded-full bg-policia-gold mr-2 shadow-inner shrink-0"></div>
                       <h4 className={`font-bold text-lg leading-tight uppercase ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                         Persona Desaparecida
                       </h4>
                     </div>
-                    <p className={`text-sm mb-4 line-clamp-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`text-sm mb-4 line-clamp-4 flex-grow ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Nuestros servidores policiales de la Dirección Especial de Lucha Contra el Crimen (FELCC) solicitan su colaboración para dar con el paradero de Jhoselin Copa Choque.
                     </p>
-                    <div className={`flex justify-between items-center text-xs font-bold uppercase pt-4 border-t ${isDarkMode ? 'border-gray-800 text-gray-500' : 'border-gray-100 text-gray-400'}`}>
+                    <div className={`flex justify-between items-center text-xs font-bold uppercase pt-4 border-t mt-auto ${isDarkMode ? 'border-gray-800 text-gray-500' : 'border-gray-100 text-gray-400'}`}>
                       <span className="bg-policia-light text-policia-dark px-3 py-1 rounded-full">Desaparecidos</span>
                       <span>Abril 2, 2026</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Noticia 4 (Caso Marset) */}
+                <div className={`rounded-xl overflow-hidden shadow-lg border transition-transform hover:-translate-y-1 hover:shadow-xl flex flex-col ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'}`}>
+                  <div className={`h-48 relative overflow-hidden flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
+                    <AutoImage 
+                      baseName="/noticia4" 
+                      alt="Caso Marset" 
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      isDarkMode={isDarkMode}
+                    />
+                  </div>
+                  <div className="p-6 flex flex-col flex-grow">
+                    <div className="flex items-center mb-3">
+                      <div className="w-4 h-4 rounded-full bg-red-600 mr-2 shadow-inner shrink-0"></div>
+                      <h4 className={`font-bold text-lg leading-tight uppercase ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                        El piloto asesinado era el sucesor de Marset
+                      </h4>
+                    </div>
+                    <p className={`text-sm mb-4 line-clamp-4 flex-grow ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Según las últimas investigaciones y operativos en Santa Cruz, la Policía Boliviana confirmó que la víctima fatal de los recientes sucesos estaba destinada a tomar el mando en la organización.
+                    </p>
+                    <div className={`flex justify-between items-center text-xs font-bold uppercase pt-4 border-t mt-auto ${isDarkMode ? 'border-gray-800 text-gray-500' : 'border-gray-100 text-gray-400'}`}>
+                      <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full border border-red-200">MARSET</span>
+                      <span>Abril 29, 2026</span>
                     </div>
                   </div>
                 </div>

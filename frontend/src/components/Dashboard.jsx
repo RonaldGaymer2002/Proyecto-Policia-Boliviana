@@ -1,5 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import HeaderStatus from './HeaderStatus';
+
+// Componente inteligente para intentar cargar la imagen con distintas extensiones automáticamente
+const AutoImage = ({ baseName, alt, className, isDarkMode }) => {
+  const extensions = ['.png', '.jpg', '.jpeg', '.webp'];
+  const [extIndex, setExtIndex] = useState(0);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setExtIndex(0);
+    setHasError(false);
+  }, [baseName]);
+
+  if (!baseName || hasError || extIndex >= extensions.length) {
+    return (
+      <div className={`w-full h-full flex flex-col items-center justify-center ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-200'}`}>
+        <span className="text-4xl opacity-20 mb-2">📸</span>
+        <span className="text-xs text-gray-500 font-bold uppercase">Sin Fotografía</span>
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={`${baseName}${extensions[extIndex]}`} 
+      alt={alt} 
+      className={className}
+      onError={() => {
+        if (extIndex < extensions.length - 1) {
+          setExtIndex(prev => prev + 1);
+        } else {
+          setHasError(true);
+        }
+      }}
+    />
+  );
+};
 
 const Dashboard = () => {
   // Estados para UI
@@ -57,10 +94,10 @@ const Dashboard = () => {
   // Simular carga inicial de activos
   useEffect(() => {
     const mockData = [
-      { id: '1', codigo: 'ACT-001', descripcion: 'Patrulla Toyota Hilux', estado: 'Bueno', unidad: 'DP-1 Santa Cruz', fecha: '2023-01-15' },
-      { id: '2', codigo: 'ACT-002', descripcion: 'Radio Motorola DP4400', estado: 'Bueno', unidad: 'DP-2 La Paz', fecha: '2023-02-10' },
-      { id: '3', codigo: 'ACT-003', descripcion: 'Computadora Desktop HP', estado: 'En Mantenimiento', unidad: 'DP-1 Santa Cruz', fecha: '2022-11-05' },
-      { id: '4', codigo: 'ACT-004', descripcion: 'Motocicleta Honda XR250', estado: 'Bueno', unidad: 'DP-3 Cochabamba', fecha: '2023-05-20' },
+      { id: '1', codigo: 'ACT-001', descripcion: 'Patrulla Toyota Hilux', estado: 'Bueno', unidad: 'DP-1 Santa Cruz', fecha: '2023-01-15', imagenBase: '/patrulla' },
+      { id: '2', codigo: 'ACT-002', descripcion: 'Radio Motorola DP4400', estado: 'Bueno', unidad: 'DP-2 La Paz', fecha: '2023-02-10', imagenBase: '/motorola' },
+      { id: '3', codigo: 'ACT-003', descripcion: 'Computadora Desktop HP', estado: 'En Mantenimiento', unidad: 'DP-1 Santa Cruz', fecha: '2022-11-05', imagenBase: '/computadora' },
+      { id: '4', codigo: 'ACT-004', descripcion: 'Motocicleta Honda XR250', estado: 'Bueno', unidad: 'DP-3 Cochabamba', fecha: '2023-05-20', imagenBase: '/moto' },
     ];
     setActivos(mockData);
   }, []);
@@ -132,6 +169,9 @@ const Dashboard = () => {
         <div className="flex-1 bg-policia-amarillo"></div>
         <div className="flex-1 bg-policia-verde"></div>
       </div>
+
+      {/* Barra Táctica: Reloj en Vivo y Clima (Ticker) */}
+      <HeaderStatus isDarkMode={isDarkMode} />
 
       {/* Header Institucional estilo www.policia.bo */}
       <header className={`px-8 py-5 flex justify-between items-center shadow-sm z-20 relative transition-colors duration-300 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -431,29 +471,93 @@ const Dashboard = () => {
             </div>
           </section>
 
-          {/* 4. SECCIÓN: NÚMEROS DE EMERGENCIA */}
-          <section className={`py-16 px-8 border-t ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-            <div className="max-w-5xl mx-auto text-center">
-              <h3 className={`text-3xl font-black uppercase tracking-widest mb-12 ${isDarkMode ? 'text-white' : 'text-policia-dark'}`}>
-                Números de Emergencia
+          {/* 4. SECCIÓN: NÚMEROS DE EMERGENCIA (CON RADAR DE BARCO / TÁCTICO) */}
+          <section className={`relative py-24 px-8 overflow-hidden border-t flex flex-col items-center justify-center ${isDarkMode ? 'bg-[#000a00] border-gray-800' : 'bg-[#0f1a10] border-gray-900'}`}>
+            
+            {/* Animación del Radar de Monitoreo (Pantalla Circular) */}
+            <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
+              <div className="relative w-[900px] h-[900px] md:w-[800px] md:h-[800px] rounded-full border-[6px] border-[#0a401a] bg-[#001100] shadow-[0_0_60px_rgba(0,255,0,0.15)] flex items-center justify-center overflow-hidden">
+                
+                {/* Cuadrícula Verde del Radar */}
+                <div className={`absolute w-[600px] h-[600px] rounded-full border border-[#00ff00] opacity-30`}></div>
+                <div className={`absolute w-[400px] h-[400px] rounded-full border border-dashed border-[#00ff00] opacity-40`}></div>
+                <div className={`absolute w-[200px] h-[200px] rounded-full border border-[#00ff00] opacity-20`}></div>
+                <div className={`absolute w-[800px] h-[800px] rounded-full border border-[#00ff00] opacity-20`}></div>
+                
+                {/* Ejes (Cruz) */}
+                <div className={`absolute w-[900px] h-px bg-[#00ff00] opacity-30`}></div>
+                <div className={`absolute h-[900px] w-px bg-[#00ff00] opacity-30`}></div>
+                
+                {/* Escáner de Barrido (Manecilla de Reloj) */}
+                <div className="absolute w-[900px] h-[900px] md:w-[800px] md:h-[800px] rounded-full animate-radar-sweep z-10">
+                  {/* Estela verde del radar */}
+                  <div 
+                    className="absolute inset-0 rounded-full" 
+                    style={{ background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 270deg, rgba(0, 255, 0, 0.6) 360deg)' }}
+                  ></div>
+                  {/* Manecilla brillante (Láser de escaneo) */}
+                  <div className="absolute top-0 left-[50%] w-[3px] h-[50%] bg-[#00ff00] shadow-[0_0_15px_#00ff00] transform -translate-x-1/2 origin-bottom"></div>
+                </div>
+
+                {/* Objetivos Detectados (Puntos Rojos con 'Datos Encontrados') */}
+                
+                {/* Objetivo 1 */}
+                <div className="absolute top-[25%] left-[30%] animate-radar-blip z-20 flex items-center justify-center" style={{ animationDelay: '0s' }}>
+                  <div className="w-4 h-4 bg-red-600 rounded-full shadow-[0_0_15px_rgba(255,0,0,1)]"></div>
+                  <div className="absolute left-6 text-red-500 font-mono font-bold text-xs w-48 text-left uppercase tracking-wider drop-shadow-md bg-black/40 px-2 py-0.5 rounded">
+                    DATO: ACT-002 ENCONTRADO
+                  </div>
+                </div>
+
+                {/* Objetivo 2 */}
+                <div className="absolute bottom-[20%] right-[25%] animate-radar-blip z-20 flex items-center justify-center" style={{ animationDelay: '1.2s' }}>
+                  <div className="w-3 h-3 bg-red-500 rounded-full shadow-[0_0_15px_rgba(255,0,0,1)]"></div>
+                  <div className="absolute right-5 text-red-500 font-mono font-bold text-xs w-48 text-right uppercase tracking-wider drop-shadow-md bg-black/40 px-2 py-0.5 rounded">
+                    DATO: INCIDENCIA DP-2
+                  </div>
+                </div>
+
+                {/* Objetivo 3 */}
+                <div className="absolute top-[45%] right-[15%] animate-radar-blip z-20 flex flex-col items-center justify-center" style={{ animationDelay: '2.5s' }}>
+                  <div className="w-5 h-5 bg-red-600 rounded-full shadow-[0_0_20px_rgba(255,0,0,1)]"></div>
+                  <div className="absolute top-6 text-red-500 font-mono font-bold text-xs w-32 text-center uppercase tracking-wider drop-shadow-md bg-black/40 px-2 py-0.5 rounded">
+                    DATO: PATRULLA A-1
+                  </div>
+                </div>
+
+                {/* Objetivo 4 */}
+                <div className="absolute bottom-[35%] left-[15%] animate-radar-blip z-20 flex items-center justify-center" style={{ animationDelay: '3.1s' }}>
+                  <div className="w-2 h-2 bg-red-400 rounded-full shadow-[0_0_10px_rgba(255,0,0,1)]"></div>
+                  <div className="absolute left-4 text-red-400 font-mono font-bold text-[10px] w-32 text-left uppercase tracking-wider drop-shadow-md bg-black/40 px-1 py-0.5 rounded">
+                    SEÑAL DÉBIL
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div className="max-w-5xl w-full mx-auto text-center relative z-10 bg-black/30 backdrop-blur-md rounded-3xl p-10 border border-white/10 shadow-2xl">
+              <h3 className={`text-3xl font-black uppercase tracking-widest mb-16 text-white drop-shadow-md flex items-center justify-center`}>
+                <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-4"></span>
+                Centro de Monitoreo - Líneas Seguras
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-4">
                 <div className="flex flex-col items-center">
-                  <p className={`font-bold text-sm uppercase tracking-wide mb-2 h-10 flex items-center ${isDarkMode ? 'text-gray-400' : 'text-policia-dark'}`}>Organismo Operativo de Tránsito</p>
-                  <p className="text-7xl font-black text-gray-400 opacity-80 drop-shadow-sm">111</p>
+                  <p className="font-bold text-sm uppercase tracking-wide mb-2 h-10 flex items-center text-green-400">Tránsito</p>
+                  <p className="text-7xl font-black text-white drop-shadow-xl">111</p>
                 </div>
                 <div className="flex flex-col items-center">
-                  <p className={`font-bold text-sm uppercase tracking-wide mb-2 h-10 flex items-center ${isDarkMode ? 'text-gray-400' : 'text-policia-dark'}`}>BOL 110</p>
-                  <p className="text-7xl font-black text-gray-400 opacity-80 drop-shadow-sm">110</p>
+                  <p className="font-bold text-sm uppercase tracking-wide mb-2 h-10 flex items-center text-green-400">BOL 110</p>
+                  <p className="text-7xl font-black text-white drop-shadow-xl">110</p>
                 </div>
                 <div className="flex flex-col items-center">
-                  <p className={`font-bold text-sm uppercase tracking-wide mb-2 h-10 flex items-center ${isDarkMode ? 'text-gray-400' : 'text-policia-dark'}`}>Bomberos</p>
-                  <p className="text-7xl font-black text-gray-400 opacity-80 drop-shadow-sm">119</p>
+                  <p className="font-bold text-sm uppercase tracking-wide mb-2 h-10 flex items-center text-green-400">Bomberos</p>
+                  <p className="text-7xl font-black text-white drop-shadow-xl">119</p>
                 </div>
-                <div className="flex flex-col items-center md:col-start-2">
-                  <p className={`font-bold text-sm uppercase tracking-wide mb-2 h-10 flex items-center text-center leading-tight ${isDarkMode ? 'text-gray-400' : 'text-policia-dark'}`}>Fuerza Especial de Lucha Contra el Crimen FELCC</p>
-                  <p className="text-7xl font-black text-gray-400 opacity-80 drop-shadow-sm">120</p>
+                <div className="flex flex-col items-center md:col-start-2 mt-4">
+                  <p className="font-bold text-sm uppercase tracking-wide mb-2 h-10 flex items-center text-center leading-tight text-green-400">F.E.L.C.C.</p>
+                  <p className="text-7xl font-black text-white drop-shadow-xl">120</p>
                 </div>
               </div>
             </div>
@@ -614,46 +718,64 @@ const Dashboard = () => {
                 </div>
                 
                 {activoSeleccionado ? (
-                  <div className="p-6 flex flex-col">
-                    <div className="space-y-5 mb-8">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Cód. Patrimonial</p>
-                        <p className={`font-mono text-xl font-bold ${isDarkMode ? 'text-policia-gold' : 'text-policia-green'}`}>{activoSeleccionado.codigo}</p>
-                      </div>
-                      <div className={`p-3 rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'}`}>
-                        <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Descripción</p>
-                        <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{activoSeleccionado.descripcion}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Unidad Policial Asignada</p>
-                        <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{activoSeleccionado.unidad}</p>
-                      </div>
-                      <div className={`flex justify-between items-center border-t pt-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Fecha Ingreso</p>
-                          <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{activoSeleccionado.fecha}</p>
+                  <div className="flex flex-col">
+                    
+                    {/* Contenedor Inteligente de Imagen del Activo */}
+                    <div className="w-full h-48 relative overflow-hidden border-b border-gray-300 dark:border-gray-700">
+                      <AutoImage 
+                        baseName={activoSeleccionado.imagenBase} 
+                        alt={activoSeleccionado.descripcion} 
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        isDarkMode={isDarkMode}
+                      />
+                      {activoSeleccionado.imagenBase && (
+                        <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-[10px] font-bold px-2 py-1 rounded pointer-events-none">
+                          FOTO OFICIAL
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Estado</p>
-                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-bold">
-                            {activoSeleccionado.estado}
-                          </span>
-                        </div>
-                      </div>
+                      )}
                     </div>
 
-                    {canBaja ? (
-                      <button 
-                        onClick={() => setIsModalOpen(true)}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded uppercase font-bold text-sm tracking-wider shadow transition-transform transform hover:-translate-y-0.5"
-                      >
-                        Registrar Baja (Art. 45)
-                      </button>
-                    ) : (
-                      <div className={`p-3 text-center rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-400' : 'bg-gray-100 border-gray-300 text-gray-600'}`}>
-                        <p className="text-xs font-bold uppercase">🔐 Acción Restringida para Auditor</p>
+                    <div className="p-6">
+                      <div className="space-y-5 mb-8">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Cód. Patrimonial</p>
+                          <p className={`font-mono text-xl font-bold ${isDarkMode ? 'text-policia-gold' : 'text-policia-green'}`}>{activoSeleccionado.codigo}</p>
+                        </div>
+                        <div className={`p-3 rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'}`}>
+                          <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Descripción</p>
+                          <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{activoSeleccionado.descripcion}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Unidad Policial Asignada</p>
+                          <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{activoSeleccionado.unidad}</p>
+                        </div>
+                        <div className={`flex justify-between items-center border-t pt-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Fecha Ingreso</p>
+                            <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{activoSeleccionado.fecha}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-400">Estado</p>
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-bold">
+                              {activoSeleccionado.estado}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    )}
+
+                      {canBaja ? (
+                        <button 
+                          onClick={() => setIsModalOpen(true)}
+                          className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded uppercase font-bold text-sm tracking-wider shadow transition-transform transform hover:-translate-y-0.5"
+                        >
+                          Registrar Baja (Art. 45)
+                        </button>
+                      ) : (
+                        <div className={`p-3 text-center rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-400' : 'bg-gray-100 border-gray-300 text-gray-600'}`}>
+                          <p className="text-xs font-bold uppercase">🔐 Acción Restringida</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="p-10 flex flex-col items-center justify-center text-center text-gray-400 h-64">

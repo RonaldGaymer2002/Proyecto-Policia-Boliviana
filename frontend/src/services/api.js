@@ -7,6 +7,15 @@ const api = axios.create({
   }
 });
 
+/* 
+ * PATRÓN DE ARQUITECTURA (MVC y DAO):
+ * Este archivo actúa como el conector principal entre la capa de VISTA (Frontend en React) 
+ * y la capa de CONTROLADOR (Backend en Express). 
+ * Las peticiones que salen de aquí son procesadas por los Controllers, quienes a su vez 
+ * interactúan con los Data Access Objects (DAO) para realizar operaciones seguras 
+ * (CRUD) sobre PostgreSQL, garantizando la separación de responsabilidades.
+ */
+
 // Interceptor de Peticiones: Adjuntar Token JWT
 api.interceptors.request.use(
   (config) => {

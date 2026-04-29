@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard';
+import Login from './components/Login';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
   const [expiredMessage, setExpiredMessage] = useState('');
 
@@ -52,8 +54,13 @@ function App() {
     );
   }
 
+  // Si no está autenticado, mostrar Login
+  if (!isAuthenticated) {
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   // Renderizar la aplicación principal (Dashboard)
-  return <Dashboard />;
+  return <Dashboard onLogout={() => setIsAuthenticated(false)} />;
 }
 
 export default App;

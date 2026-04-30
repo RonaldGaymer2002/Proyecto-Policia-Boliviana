@@ -65,6 +65,15 @@ const Dashboard = ({ onLogout }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [motivoBaja, setMotivoBaja] = useState('');
   const [archivoEvidencia, setArchivoEvidencia] = useState(null);
+  const [isProcesandoBaja, setIsProcesandoBaja] = useState(false);
+
+  // Estados para Modal de Ingreso (RF-01, RF-02)
+  const [isModalIngresoOpen, setIsModalIngresoOpen] = useState(false);
+  const [nuevoActivo, setNuevoActivo] = useState({
+    descripcion: '',
+    categoria: '',
+    unidad: ''
+  });
 
   // Textos y Rutas del Carrusel
   const slides = [
@@ -75,18 +84,77 @@ const Dashboard = ({ onLogout }) => {
     { id: 5, image: '/slide5.jpg', title: 'Prevención y Educación', subtitle: 'Trabajando juntos para construir una sociedad más segura.' },
   ];
 
-  // Datos simulados para los nuevos módulos
-  const mockAuditorias = [
+  // Estados para Auditorías (RF-04, RF-05)
+  const [auditorias, setAuditorias] = useState([
     { id: 1, fecha: '2026-04-10', unidad: 'DP-1 Santa Cruz', auditor: 'Lic. Juan Pérez', estado: 'Concluida sin observaciones' },
     { id: 2, fecha: '2026-03-25', unidad: 'DP-2 La Paz', auditor: 'Lic. Ana Gómez', estado: 'Faltante de 2 activos (Robo reportado)' },
     { id: 3, fecha: '2026-02-14', unidad: 'DP-3 Cochabamba', auditor: 'Lic. Juan Pérez', estado: 'En proceso de conciliación' },
-  ];
+  ]);
+  const [isModalAuditoriaOpen, setIsModalAuditoriaOpen] = useState(false);
+  const [nuevaAuditoria, setNuevaAuditoria] = useState({ unidad: '', fecha: '' });
+
+  const handleProgramarAuditoria = (e) => {
+    e.preventDefault();
+    const id = auditorias.length + 1;
+    const auditoriaProg = {
+      id,
+      fecha: nuevaAuditoria.fecha,
+      unidad: nuevaAuditoria.unidad,
+      auditor: rolActual,
+      estado: 'Programada'
+    };
+    setAuditorias(prev => [auditoriaProg, ...prev]);
+    
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    setBitacoraLogs(prev => [
+      { id: Date.now(), timestamp, accion: 'INSERT', tabla: 'tbl_auditorias', usuario: rolActual, detalle: `Auditoría programada para ${nuevaAuditoria.unidad}` },
+      ...prev
+    ]);
+    
+    setIsModalAuditoriaOpen(false);
+    setNuevaAuditoria({ unidad: '', fecha: '' });
+  };
+
+  const handleConciliacion = (id, resultado) => {
+    setAuditorias(prev => prev.map(a => 
+      a.id === id ? { ...a, estado: resultado } : a
+    ));
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    setBitacoraLogs(prev => [
+      { id: Date.now(), timestamp, accion: 'UPDATE', tabla: 'tbl_auditorias', usuario: rolActual, detalle: `Conciliación ACTA-${id}: ${resultado}` },
+      ...prev
+    ]);
+  };
 
   const [bitacoraLogs, setBitacoraLogs] = useState([
     { id: 101, timestamp: '2026-04-29 08:30:12', accion: 'INSERT', tabla: 'tbl_activos', usuario: 'Administrativo (DP-1)', detalle: 'Nuevo registro: ACT-005 (Camioneta)' },
     { id: 102, timestamp: '2026-04-28 14:15:05', accion: 'UPDATE', tabla: 'tbl_activos', usuario: 'Comandante Gral.', detalle: 'Cambio de estado ACT-002 a "Dado de Baja"' },
     { id: 103, timestamp: '2026-04-25 09:10:00', accion: 'DELETE', tabla: 'tbl_usuarios', usuario: 'DBA Sysadmin', detalle: 'Eliminación lógica de usuario inactivo' },
   ]);
+
+  // Estados para Usuarios (RF-11)
+  const [usuarios, setUsuarios] = useState([
+    { id: 1, nombre: 'Gral. Vladimir Yuri Calderón', rol: 'Comandante Gral.', unidad: 'Comando General', estado: 'Activo' },
+    { id: 2, nombre: 'Lic. Juan Pérez', rol: 'Auditor', unidad: 'DP-1 Santa Cruz', estado: 'Activo' },
+    { id: 3, nombre: 'Sgto. María López', rol: 'Administrativo', unidad: 'DP-2 La Paz', estado: 'Activo' }
+  ]);
+  const [isModalUsuarioOpen, setIsModalUsuarioOpen] = useState(false);
+  const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: '', rol: '', unidad: '' });
+
+  const handleRegistrarUsuario = (e) => {
+    e.preventDefault();
+    const id = usuarios.length + 1;
+    setUsuarios(prev => [...prev, { id, ...nuevoUsuario, estado: 'Activo' }]);
+    
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    setBitacoraLogs(prev => [
+      { id: Date.now(), timestamp, accion: 'INSERT', tabla: 'tbl_usuarios', usuario: rolActual, detalle: `Usuario registrado: ${nuevoUsuario.nombre} (${nuevoUsuario.rol})` },
+      ...prev
+    ]);
+    
+    setIsModalUsuarioOpen(false);
+    setNuevoUsuario({ nombre: '', rol: '', unidad: '' });
+  };
 
   // Efecto para Carrusel Automático (10 segundos)
   useEffect(() => {
@@ -146,7 +214,12 @@ const Dashboard = ({ onLogout }) => {
     e.preventDefault();
     if (!activoSeleccionado) return;
 
+    setIsProcesandoBaja(true);
+
     try {
+      // Simular delay de carga de documento (1.5 segundos)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       await api.post(`/activos/${activoSeleccionado.id}/baja`, { 
         motivo: motivoBaja,
         tieneArchivo: !!archivoEvidencia
@@ -171,14 +244,83 @@ const Dashboard = ({ onLogout }) => {
         ...prev
       ]);
 
-      alert('Activo dado de baja exitosamente');
+      // Generar Comprobante PDF/TXT simulado
+      const comprobanteContent = `S.G.A.N.C. - POLICÍA BOLIVIANA\nCOMPROBANTE OFICIAL DE BAJA DE ACTIVO\n\nFecha: ${timestamp}\nUnidad: ${activoSeleccionado.unidad}\nActivo: ${activoSeleccionado.codigo} - ${activoSeleccionado.descripcion}\nMotivo: ${motivoBaja}\nUsuario Autorizante: ${rolActual}\n\nDocumento Válido para Auditoría Contable.`;
+      const blob = new Blob([comprobanteContent], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Comprobante_Baja_${activoSeleccionado.codigo}.txt`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
       setIsModalOpen(false);
       setActivoSeleccionado(null);
       setMotivoBaja('');
       setArchivoEvidencia(null);
     } catch (error) {
       alert('Error al registrar baja: ' + (error.response?.data?.message || 'Desconocido'));
+    } finally {
+      setIsProcesandoBaja(false);
     }
+  };
+
+  const handleRegistrarIngreso = (e) => {
+    e.preventDefault();
+    const codigo = `ACT-00${activos.length + 1}`;
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    
+    const activoNuevo = {
+      id: Date.now().toString(),
+      codigo,
+      descripcion: nuevoActivo.descripcion,
+      categoria: nuevoActivo.categoria, // RF-02
+      estado: 'Bueno',
+      unidad: nuevoActivo.unidad,
+      fecha: timestamp.substring(0, 10),
+      imagenBase: '/default'
+    };
+
+    setActivos(prev => [activoNuevo, ...prev]);
+
+    setBitacoraLogs(prev => [
+      { 
+        id: Date.now(), 
+        timestamp, 
+        accion: 'INSERT', 
+        tabla: 'tbl_activos', 
+        usuario: rolActual, 
+        detalle: `Nuevo ingreso: ${codigo} (${nuevoActivo.categoria})` 
+      },
+      ...prev
+    ]);
+
+    setIsModalIngresoOpen(false);
+    setNuevoActivo({ descripcion: '', categoria: '', unidad: '' });
+  };
+
+  const handleMantenimiento = () => {
+    if (!activoSeleccionado) return;
+    
+    setActivos(prevActivos => prevActivos.map(a => 
+      a.id === activoSeleccionado.id ? { ...a, estado: 'En Mantenimiento' } : a
+    ));
+
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    setBitacoraLogs(prev => [
+      { 
+        id: Date.now(), 
+        timestamp, 
+        accion: 'UPDATE', 
+        tabla: 'tbl_activos', 
+        usuario: rolActual, 
+        detalle: `Mantenimiento de rutina programado para ${activoSeleccionado.codigo}` 
+      },
+      ...prev
+    ]);
+
+    setActivoSeleccionado(prev => ({ ...prev, estado: 'En Mantenimiento' }));
   };
 
   // Permisos basados en Roles (RBAC Visual)
@@ -235,6 +377,20 @@ const Dashboard = ({ onLogout }) => {
                 📊 Auditorías (RF-04)
               </button>
               <button 
+                onClick={() => setVistaActual('reportes')} 
+                className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all ${vistaActual === 'reportes' ? 'bg-emerald-900/40 text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
+              >
+                📑 Centro de Reportes
+              </button>
+              {(rolActual === 'Administrador' || rolActual === 'Comandante Gral.') && (
+                <button 
+                  onClick={() => setVistaActual('usuarios')} 
+                  className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all ${vistaActual === 'usuarios' ? 'bg-emerald-900/40 text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
+                >
+                  👥 Gestión Usuarios
+                </button>
+              )}
+              <button 
                 onClick={() => setVistaActual('bitacora')} 
                 className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all ${vistaActual === 'bitacora' ? 'bg-emerald-900/40 text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
               >
@@ -264,6 +420,8 @@ const Dashboard = ({ onLogout }) => {
                  vistaActual === 'activos' ? 'Inventario y Control' : 
                  vistaActual === 'auditorias' ? 'Auditorías Físicas' : 
                  vistaActual === 'bitacora' ? 'Bitácora Transaccional' : 
+                 vistaActual === 'reportes' ? 'Centro de Reportes Estratégicos' : 
+                 vistaActual === 'usuarios' ? 'Gestión de Usuarios (RF-11)' : 
                  'Información del Proyecto'}
               </h2>
             </div>
@@ -798,8 +956,14 @@ const Dashboard = ({ onLogout }) => {
 
                 {/* Tabla de Activos */}
                 <div className={`rounded-lg shadow-sm border overflow-hidden flex-1 flex flex-col transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                  <div className={`border-b p-4 ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className={`border-b p-4 flex justify-between items-center ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
                     <h2 className={`font-bold uppercase text-sm tracking-wide ${isDarkMode ? 'text-policia-gold' : 'text-policia-dark'}`}>Padrón de Activos No Corrientes</h2>
+                    <button 
+                      onClick={() => setIsModalIngresoOpen(true)}
+                      className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase rounded shadow transition-colors"
+                    >
+                      + Registrar Ingreso
+                    </button>
                   </div>
                   <div className="overflow-y-auto">
                     <table className="w-full text-left border-collapse">
@@ -899,12 +1063,20 @@ const Dashboard = ({ onLogout }) => {
                       </div>
 
                       {canBaja ? (
-                        <button 
-                          onClick={() => setIsModalOpen(true)}
-                          className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded uppercase font-bold text-sm tracking-wider shadow transition-transform transform hover:-translate-y-0.5"
-                        >
-                          Registrar Baja (Art. 45)
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <button 
+                            onClick={handleMantenimiento}
+                            className="w-full bg-yellow-600 hover:bg-yellow-500 text-white py-2 rounded uppercase font-bold text-xs tracking-wider shadow transition-transform transform hover:-translate-y-0.5"
+                          >
+                            ⚙️ Mantenimiento de Rutina
+                          </button>
+                          <button 
+                            onClick={() => setIsModalOpen(true)}
+                            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded uppercase font-bold text-xs tracking-wider shadow transition-transform transform hover:-translate-y-0.5"
+                          >
+                            Registrar Baja (Art. 45)
+                          </button>
+                        </div>
                       ) : (
                         <div className={`p-3 text-center rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-400' : 'bg-gray-100 border-gray-300 text-gray-600'}`}>
                           <p className="text-xs font-bold uppercase">🔐 Acción Restringida</p>
@@ -931,7 +1103,9 @@ const Dashboard = ({ onLogout }) => {
                   <span className={`text-[10px] mt-1 inline-block px-2 py-0.5 rounded font-bold uppercase tracking-widest ${isDarkMode ? 'bg-emerald-900/50 text-emerald-400' : 'bg-gray-200 text-gray-600'}`}>Rol Actual: {rolActual}</span>
                 </div>
                 {rolActual === 'Auditor' && (
-                  <button className="bg-policia-gold hover:bg-yellow-500 text-black px-4 py-2 rounded text-xs font-bold uppercase tracking-widest shadow-lg transition-transform hover:-translate-y-0.5">
+                  <button 
+                    onClick={() => setIsModalAuditoriaOpen(true)}
+                    className="bg-policia-gold hover:bg-yellow-500 text-black px-4 py-2 rounded text-xs font-bold uppercase tracking-widest shadow-lg transition-transform hover:-translate-y-0.5">
                     + Programar Auditoría
                   </button>
                 )}
@@ -948,19 +1122,26 @@ const Dashboard = ({ onLogout }) => {
                     </tr>
                   </thead>
                   <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700 text-gray-300' : 'divide-gray-100 text-gray-700'}`}>
-                    {mockAuditorias.map(aud => (
+                    {auditorias.map(aud => (
                       <tr key={aud.id} className={`transition-colors ${isDarkMode ? 'hover:bg-gray-750' : 'hover:bg-blue-50'}`}>
                         <td className="p-4 font-mono font-bold text-sm">ACTA-{aud.id}</td>
                         <td className="p-4 text-sm">{aud.fecha}</td>
                         <td className="p-4 text-sm">{aud.unidad}</td>
                         <td className="p-4 text-sm">{aud.auditor}</td>
-                        <td className="p-4 flex justify-center space-x-2">
-                          <button className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border ${isDarkMode ? 'bg-green-900/30 text-green-500 border-green-700 hover:bg-green-800 hover:text-white' : 'bg-green-100 text-green-700 border-green-300 hover:bg-green-600 hover:text-white'}`}>
-                            Físico OK
-                          </button>
-                          <button className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border ${isDarkMode ? 'bg-red-900/30 text-red-500 border-red-700 hover:bg-red-800 hover:text-white' : 'bg-red-100 text-red-700 border-red-300 hover:bg-red-600 hover:text-white'}`}>
-                            Diferencia Detectada
-                          </button>
+                        <td className="p-4 flex flex-col items-center justify-center space-y-1">
+                          <span className="text-[10px] font-bold mb-1 uppercase text-gray-500 text-center">{aud.estado}</span>
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => handleConciliacion(aud.id, 'Físico OK - Sin Observaciones')}
+                              className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border ${isDarkMode ? 'bg-green-900/30 text-green-500 border-green-700 hover:bg-green-800 hover:text-white' : 'bg-green-100 text-green-700 border-green-300 hover:bg-green-600 hover:text-white'}`}>
+                              Físico OK
+                            </button>
+                            <button 
+                              onClick={() => handleConciliacion(aud.id, 'Diferencia Detectada')}
+                              className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border ${isDarkMode ? 'bg-red-900/30 text-red-500 border-red-700 hover:bg-red-800 hover:text-white' : 'bg-red-100 text-red-700 border-red-300 hover:bg-red-600 hover:text-white'}`}>
+                              Diferencia Detectada
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -999,6 +1180,99 @@ const Dashboard = ({ onLogout }) => {
                         <td className={`p-3 font-bold ${log.accion === 'INSERT' ? 'text-blue-400' : log.accion === 'UPDATE' ? 'text-yellow-400' : 'text-red-400'}`}>{log.accion}</td>
                         <td className="p-3 text-emerald-300">{log.tabla}</td>
                         <td className="p-3 text-gray-300">{log.detalle}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Vista Centro de Reportes (RF-07, 08, 09, 10) */}
+          {vistaActual === 'reportes' && (
+            <div className={`m-6 rounded-lg shadow-sm border overflow-hidden flex flex-col transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <div className={`border-b p-4 ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                <h2 className={`font-bold uppercase text-sm tracking-wide ${isDarkMode ? 'text-policia-gold' : 'text-policia-dark'}`}>Generación de Reportes Estratégicos</h2>
+              </div>
+              <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div className={`p-6 border rounded-lg shadow-sm flex flex-col justify-between ${isDarkMode ? 'bg-gray-750 border-gray-600' : 'bg-white border-gray-200'}`}>
+                  <div>
+                    <h3 className={`font-bold text-lg mb-2 uppercase ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>📊 Existencias con Filtros (RF-07)</h3>
+                    <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Reporte detallado del padrón de activos filtrado por unidad policial y estado actual.</p>
+                  </div>
+                  <button onClick={() => handleDescargarReporte('pdf')} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase py-2 px-4 rounded transition-colors shadow">
+                    Generar PDF
+                  </button>
+                </div>
+
+                <div className={`p-6 border rounded-lg shadow-sm flex flex-col justify-between ${isDarkMode ? 'bg-gray-750 border-gray-600' : 'bg-white border-gray-200'}`}>
+                  <div>
+                    <h3 className={`font-bold text-lg mb-2 uppercase ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>⚙️ Mantenimiento Pendiente (RF-08)</h3>
+                    <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Listado de activos que requieren o están en proceso de mantenimiento preventivo/correctivo.</p>
+                  </div>
+                  <button onClick={() => handleDescargarReporte('excel')} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase py-2 px-4 rounded transition-colors shadow">
+                    Generar Excel
+                  </button>
+                </div>
+
+                <div className={`p-6 border rounded-lg shadow-sm flex flex-col justify-between ${isDarkMode ? 'bg-gray-750 border-gray-600' : 'bg-white border-gray-200'}`}>
+                  <div>
+                    <h3 className={`font-bold text-lg mb-2 uppercase ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>⏱️ Tiempo de Vida Útil (RF-09)</h3>
+                    <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Análisis de depreciación y tiempo restante de vida útil del parque automotor y equipos.</p>
+                  </div>
+                  <button onClick={() => handleDescargarReporte('pdf')} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase py-2 px-4 rounded transition-colors shadow">
+                    Generar PDF
+                  </button>
+                </div>
+
+                <div className={`p-6 border rounded-lg shadow-sm flex flex-col justify-between ${isDarkMode ? 'bg-gray-750 border-gray-600' : 'bg-white border-gray-200'}`}>
+                  <div>
+                    <h3 className={`font-bold text-lg mb-2 uppercase ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>📉 Comparativo de Bajas (RF-10)</h3>
+                    <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Estadísticas de activos dados de baja categorizados por obsolescencia, robos o siniestros.</p>
+                  </div>
+                  <button onClick={() => handleDescargarReporte('excel')} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase py-2 px-4 rounded transition-colors shadow">
+                    Generar Excel
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Vista Gestión de Usuarios (RF-11) */}
+          {vistaActual === 'usuarios' && (rolActual === 'Administrador' || rolActual === 'Comandante Gral.') && (
+            <div className={`m-6 rounded-lg shadow-sm border overflow-hidden flex flex-col transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <div className={`border-b p-4 flex justify-between items-center ${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                <h2 className={`font-bold uppercase text-sm tracking-wide ${isDarkMode ? 'text-policia-gold' : 'text-policia-dark'}`}>Directorio de Usuarios del Sistema</h2>
+                <button 
+                  onClick={() => setIsModalUsuarioOpen(true)}
+                  className="px-3 py-1 bg-policia-gold hover:bg-yellow-500 text-black text-xs font-bold uppercase rounded shadow transition-colors"
+                >
+                  + Añadir Usuario
+                </button>
+              </div>
+              <div className="p-0 overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead className={`text-[10px] uppercase tracking-widest border-b ${isDarkMode ? 'bg-gray-900/50 text-gray-400 border-gray-700' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                    <tr>
+                      <th className="p-4 font-bold">Nombre Completo</th>
+                      <th className="p-4 font-bold">Rol en Sistema</th>
+                      <th className="p-4 font-bold">Unidad Base</th>
+                      <th className="p-4 font-bold text-center">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700 text-gray-300' : 'divide-gray-100 text-gray-700'}`}>
+                    {usuarios.map(user => (
+                      <tr key={user.id} className={`transition-colors ${isDarkMode ? 'hover:bg-gray-750' : 'hover:bg-blue-50'}`}>
+                        <td className="p-4 font-bold text-sm">{user.nombre}</td>
+                        <td className="p-4 text-sm font-mono text-emerald-500">{user.rol}</td>
+                        <td className="p-4 text-sm">{user.unidad}</td>
+                        <td className="p-4 flex justify-center">
+                          <span className="px-2 py-1 rounded bg-green-900/30 text-green-500 border border-green-700 text-xs font-bold uppercase tracking-widest">
+                            {user.estado}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -1117,9 +1391,214 @@ const Dashboard = ({ onLogout }) => {
                 </button>
                 <button 
                   type="submit"
-                  className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold text-sm uppercase tracking-wider shadow transition-colors"
+                  disabled={isProcesandoBaja}
+                  className={`px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold text-sm uppercase tracking-wider shadow transition-colors ${isProcesandoBaja ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  Procesar Baja
+                  {isProcesandoBaja ? 'Procesando...' : 'Procesar Baja'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Registrar Ingreso (RF-01, RF-02) */}
+      {isModalIngresoOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+          <div className={`rounded-lg shadow-2xl w-full max-w-lg overflow-hidden border-t-4 border-emerald-500 transition-colors ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className={`px-6 py-4 border-b flex justify-between items-center ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <h3 className="text-lg font-bold text-emerald-500 uppercase">Registrar Nuevo Ingreso</h3>
+              <button onClick={() => setIsModalIngresoOpen(false)} className="text-gray-400 hover:text-emerald-500 font-bold text-xl">&times;</button>
+            </div>
+            
+            <form onSubmit={handleRegistrarIngreso} className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-policia-light'}`}>
+              <div className="mb-4">
+                <label className={`block text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Descripción del Activo</label>
+                <input 
+                  required
+                  type="text"
+                  placeholder="Ej: Camioneta Nissan Patrol"
+                  className={`w-full p-2.5 border rounded outline-none ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white focus:ring-emerald-500' : 'bg-white border-gray-300 focus:ring-emerald-600'}`}
+                  value={nuevoActivo.descripcion}
+                  onChange={e => setNuevoActivo({...nuevoActivo, descripcion: e.target.value})}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className={`block text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Categoría (RF-02)</label>
+                <select 
+                  required
+                  className={`w-full p-2.5 border rounded outline-none ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white focus:ring-emerald-500' : 'bg-white border-gray-300 focus:ring-emerald-600'}`}
+                  value={nuevoActivo.categoria}
+                  onChange={e => setNuevoActivo({...nuevoActivo, categoria: e.target.value})}
+                >
+                  <option value="">Seleccione categoría...</option>
+                  <option value="Vehículos Terrestres">Vehículos Terrestres</option>
+                  <option value="Armamento y Municiones">Armamento y Municiones</option>
+                  <option value="Equipos de Comunicación">Equipos de Comunicación</option>
+                  <option value="Mobiliario de Oficina">Mobiliario de Oficina</option>
+                  <option value="Equipos de Computación">Equipos de Computación</option>
+                </select>
+              </div>
+
+              <div className="mb-6">
+                <label className={`block text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Unidad de Asignación</label>
+                <select 
+                  required
+                  className={`w-full p-2.5 border rounded outline-none ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white focus:ring-emerald-500' : 'bg-white border-gray-300 focus:ring-emerald-600'}`}
+                  value={nuevoActivo.unidad}
+                  onChange={e => setNuevoActivo({...nuevoActivo, unidad: e.target.value})}
+                >
+                  <option value="">Seleccione unidad...</option>
+                  <option value="DP-1 Santa Cruz">DP-1 Santa Cruz</option>
+                  <option value="DP-2 La Paz">DP-2 La Paz</option>
+                  <option value="DP-3 Cochabamba">DP-3 Cochabamba</option>
+                  <option value="Comando General">Comando General</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalIngresoOpen(false)}
+                  className={`px-5 py-2 font-bold text-sm uppercase tracking-wider transition-colors ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-sm uppercase tracking-wider shadow transition-colors"
+                >
+                  Confirmar Ingreso
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Programar Auditoría (RF-04) */}
+      {isModalAuditoriaOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+          <div className={`rounded-lg shadow-2xl w-full max-w-lg overflow-hidden border-t-4 border-policia-gold transition-colors ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className={`px-6 py-4 border-b flex justify-between items-center ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <h3 className="text-lg font-bold text-policia-gold uppercase">Programar Auditoría Físico-Contable</h3>
+              <button onClick={() => setIsModalAuditoriaOpen(false)} className="text-gray-400 hover:text-yellow-500 font-bold text-xl">&times;</button>
+            </div>
+            
+            <form onSubmit={handleProgramarAuditoria} className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-policia-light'}`}>
+              <div className="mb-4">
+                <label className={`block text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Unidad Policial a Auditar</label>
+                <select 
+                  required
+                  className={`w-full p-2.5 border rounded outline-none ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white focus:ring-yellow-500' : 'bg-white border-gray-300 focus:ring-yellow-600'}`}
+                  value={nuevaAuditoria.unidad}
+                  onChange={e => setNuevaAuditoria({...nuevaAuditoria, unidad: e.target.value})}
+                >
+                  <option value="">Seleccione unidad...</option>
+                  <option value="DP-1 Santa Cruz">DP-1 Santa Cruz</option>
+                  <option value="DP-2 La Paz">DP-2 La Paz</option>
+                  <option value="DP-3 Cochabamba">DP-3 Cochabamba</option>
+                </select>
+              </div>
+
+              <div className="mb-6">
+                <label className={`block text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Fecha de Ejecución</label>
+                <input 
+                  required
+                  type="date"
+                  className={`w-full p-2.5 border rounded outline-none ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white focus:ring-yellow-500' : 'bg-white border-gray-300 focus:ring-yellow-600'}`}
+                  value={nuevaAuditoria.fecha}
+                  onChange={e => setNuevaAuditoria({...nuevaAuditoria, fecha: e.target.value})}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalAuditoriaOpen(false)}
+                  className={`px-5 py-2 font-bold text-sm uppercase tracking-wider transition-colors ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="px-6 py-2 bg-policia-gold hover:bg-yellow-500 text-black rounded font-bold text-sm uppercase tracking-wider shadow transition-colors"
+                >
+                  Programar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Registrar Usuario (RF-11) */}
+      {isModalUsuarioOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+          <div className={`rounded-lg shadow-2xl w-full max-w-lg overflow-hidden border-t-4 border-policia-gold transition-colors ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className={`px-6 py-4 border-b flex justify-between items-center ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <h3 className="text-lg font-bold text-policia-gold uppercase">Añadir Nuevo Usuario</h3>
+              <button onClick={() => setIsModalUsuarioOpen(false)} className="text-gray-400 hover:text-yellow-500 font-bold text-xl">&times;</button>
+            </div>
+            
+            <form onSubmit={handleRegistrarUsuario} className={`p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-policia-light'}`}>
+              <div className="mb-4">
+                <label className={`block text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Nombre Completo</label>
+                <input 
+                  required
+                  type="text"
+                  placeholder="Ej: My. Carlos Mamani"
+                  className={`w-full p-2.5 border rounded outline-none ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white focus:ring-yellow-500' : 'bg-white border-gray-300 focus:ring-yellow-600'}`}
+                  value={nuevoUsuario.nombre}
+                  onChange={e => setNuevoUsuario({...nuevoUsuario, nombre: e.target.value})}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className={`block text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Rol en Sistema</label>
+                <select 
+                  required
+                  className={`w-full p-2.5 border rounded outline-none ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white focus:ring-yellow-500' : 'bg-white border-gray-300 focus:ring-yellow-600'}`}
+                  value={nuevoUsuario.rol}
+                  onChange={e => setNuevoUsuario({...nuevoUsuario, rol: e.target.value})}
+                >
+                  <option value="">Seleccione rol...</option>
+                  <option value="Administrador">Administrador</option>
+                  <option value="Auditor">Auditor</option>
+                  <option value="Administrativo">Administrativo</option>
+                </select>
+              </div>
+
+              <div className="mb-6">
+                <label className={`block text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Unidad Base</label>
+                <select 
+                  required
+                  className={`w-full p-2.5 border rounded outline-none ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white focus:ring-yellow-500' : 'bg-white border-gray-300 focus:ring-yellow-600'}`}
+                  value={nuevoUsuario.unidad}
+                  onChange={e => setNuevoUsuario({...nuevoUsuario, unidad: e.target.value})}
+                >
+                  <option value="">Seleccione unidad...</option>
+                  <option value="Comando General">Comando General</option>
+                  <option value="DP-1 Santa Cruz">DP-1 Santa Cruz</option>
+                  <option value="DP-2 La Paz">DP-2 La Paz</option>
+                  <option value="DP-3 Cochabamba">DP-3 Cochabamba</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalUsuarioOpen(false)}
+                  className={`px-5 py-2 font-bold text-sm uppercase tracking-wider transition-colors ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'}`}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="px-6 py-2 bg-policia-gold hover:bg-yellow-500 text-black rounded font-bold text-sm uppercase tracking-wider shadow transition-colors"
+                >
+                  Guardar Usuario
                 </button>
               </div>
             </form>

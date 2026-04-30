@@ -82,11 +82,11 @@ const Dashboard = ({ onLogout }) => {
     { id: 3, fecha: '2026-02-14', unidad: 'DP-3 Cochabamba', auditor: 'Lic. Juan Pérez', estado: 'En proceso de conciliación' },
   ];
 
-  const mockBitacora = [
+  const [bitacoraLogs, setBitacoraLogs] = useState([
     { id: 101, timestamp: '2026-04-29 08:30:12', accion: 'INSERT', tabla: 'tbl_activos', usuario: 'Administrativo (DP-1)', detalle: 'Nuevo registro: ACT-005 (Camioneta)' },
     { id: 102, timestamp: '2026-04-28 14:15:05', accion: 'UPDATE', tabla: 'tbl_activos', usuario: 'Comandante Gral.', detalle: 'Cambio de estado ACT-002 a "Dado de Baja"' },
     { id: 103, timestamp: '2026-04-25 09:10:00', accion: 'DELETE', tabla: 'tbl_usuarios', usuario: 'DBA Sysadmin', detalle: 'Eliminación lógica de usuario inactivo' },
-  ];
+  ]);
 
   // Efecto para Carrusel Automático (10 segundos)
   useEffect(() => {
@@ -151,9 +151,31 @@ const Dashboard = ({ onLogout }) => {
         motivo: motivoBaja,
         tieneArchivo: !!archivoEvidencia
       });
+      
+      // Simular actualización en la UI para la presentación
+      setActivos(prevActivos => prevActivos.map(a => 
+        a.id === activoSeleccionado.id ? { ...a, estado: 'Dado de Baja' } : a
+      ));
+
+      // Agregar a la bitácora inmutable en tiempo real
+      const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      setBitacoraLogs(prev => [
+        { 
+          id: Date.now(), 
+          timestamp, 
+          accion: 'UPDATE', 
+          tabla: 'tbl_activos', 
+          usuario: rolActual, 
+          detalle: `Baja de activo ${activoSeleccionado.codigo} (Motivo: ${motivoBaja})` 
+        },
+        ...prev
+      ]);
+
       alert('Activo dado de baja exitosamente');
       setIsModalOpen(false);
       setActivoSeleccionado(null);
+      setMotivoBaja('');
+      setArchivoEvidencia(null);
     } catch (error) {
       alert('Error al registrar baja: ' + (error.response?.data?.message || 'Desconocido'));
     }
@@ -970,7 +992,7 @@ const Dashboard = ({ onLogout }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-emerald-900/20 text-gray-400">
-                    {mockBitacora.map(log => (
+                    {bitacoraLogs.map(log => (
                       <tr key={log.id} className="hover:bg-emerald-900/10 transition-colors">
                         <td className="p-3 text-gray-600 whitespace-nowrap">[{log.timestamp}]</td>
                         <td className="p-3 text-purple-400">{log.usuario}</td>

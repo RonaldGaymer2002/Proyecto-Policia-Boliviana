@@ -6,6 +6,16 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
   const [expiredMessage, setExpiredMessage] = useState('');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [idioma, setIdioma] = useState('es');
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   useEffect(() => {
     // Escuchar el evento emitido por el interceptor de Axios
@@ -56,11 +66,11 @@ function App() {
 
   // Si no está autenticado, mostrar Login
   if (!isAuthenticated) {
-    return <Login onLogin={() => setIsAuthenticated(true)} />;
+    return <Login onLogin={() => setIsAuthenticated(true)} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} idioma={idioma} setIdioma={setIdioma} />;
   }
 
   // Renderizar la aplicación principal (Dashboard)
-  return <Dashboard onLogout={() => setIsAuthenticated(false)} />;
+  return <Dashboard onLogout={() => setIsAuthenticated(false)} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} idioma={idioma} setIdioma={setIdioma} />;
 }
 
 export default App;

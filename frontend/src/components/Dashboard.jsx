@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import HeaderStatus from './HeaderStatus';
+import { translations } from '../services/translations';
 
 // Componente inteligente para intentar cargar la imagen con distintas extensiones automáticamente
 const AutoImage = ({ baseName, alt, className, isDarkMode }) => {
@@ -44,9 +45,8 @@ const AutoImage = ({ baseName, alt, className, isDarkMode }) => {
  * Recibe estado/datos y renderiza la interfaz táctica interactiva para el usuario final.
  * Las peticiones al backend (Controladores) se hacen a través de la API.
  */
-const Dashboard = ({ onLogout }) => {
+const Dashboard = ({ onLogout, isDarkMode, setIsDarkMode, idioma, setIdioma }) => {
   // Estados para UI
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [rolActual, setRolActual] = useState('Comandante Gral.');
   const [vistaActual, setVistaActual] = useState('inicio'); // 'inicio', 'activos', 'auditorias', 'bitacora'
 
@@ -66,6 +66,7 @@ const Dashboard = ({ onLogout }) => {
   const [motivoBaja, setMotivoBaja] = useState('');
   const [archivoEvidencia, setArchivoEvidencia] = useState(null);
   const [isProcesandoBaja, setIsProcesandoBaja] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Estados para Modal de Ingreso (RF-01, RF-02)
   const [isModalIngresoOpen, setIsModalIngresoOpen] = useState(false);
@@ -176,14 +177,7 @@ const Dashboard = ({ onLogout }) => {
     setActivos(mockData);
   }, []);
 
-  // Efecto para aplicar Dark Mode al HTML
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+
 
   const handleDescargarReporte = async (formato) => {
     if (formato === 'pdf') {
@@ -417,45 +411,45 @@ const Dashboard = ({ onLogout }) => {
                 onClick={() => setVistaActual('inicio')} 
                 className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all ${vistaActual === 'inicio' ? 'bg-emerald-900/40 text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
               >
-                📡 Radar Monitoreo
+                📡 {translations[idioma].radar}
               </button>
               <button 
                 onClick={() => setVistaActual('activos')} 
                 className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all ${vistaActual === 'activos' ? 'bg-emerald-900/40 text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
               >
-                🛡️ Gestión Activos
+                🛡️ {translations[idioma].activos}
               </button>
               <button 
                 onClick={() => setVistaActual('auditorias')} 
                 className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all ${vistaActual === 'auditorias' ? 'bg-emerald-900/40 text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
               >
-                📊 Auditorías (RF-04)
+                📊 {translations[idioma].auditorias}
               </button>
               <button 
                 onClick={() => setVistaActual('reportes')} 
                 className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all ${vistaActual === 'reportes' ? 'bg-emerald-900/40 text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
               >
-                📑 Centro de Reportes
+                📑 {translations[idioma].reportes}
               </button>
               {(rolActual === 'Administrador' || rolActual === 'Comandante Gral.') && (
                 <button 
                   onClick={() => setVistaActual('usuarios')} 
                   className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all ${vistaActual === 'usuarios' ? 'bg-emerald-900/40 text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
                 >
-                  👥 Gestión Usuarios
+                  👥 {translations[idioma].usuarios}
                 </button>
               )}
               <button 
                 onClick={() => setVistaActual('bitacora')} 
                 className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all ${vistaActual === 'bitacora' ? 'bg-emerald-900/40 text-emerald-400 border-l-4 border-emerald-500 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
               >
-                🖥️ Bitácora (RF-12)
+                🖥️ {translations[idioma].bitacora}
               </button>
               <button 
                 onClick={() => setVistaActual('proyecto')} 
                 className={`w-full text-left px-4 py-3 rounded uppercase text-xs font-bold tracking-widest transition-all mt-8 ${vistaActual === 'proyecto' ? 'bg-blue-900/40 text-blue-400 border-l-4 border-blue-500' : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-4 border-transparent'}`}
               >
-                🎓 Info Proyecto
+                🎓 {translations[idioma].info}
               </button>
             </nav>
           </div>
@@ -471,13 +465,13 @@ const Dashboard = ({ onLogout }) => {
           <header className={`px-8 py-4 flex justify-between items-center shadow-sm z-10 transition-colors ${isDarkMode ? 'bg-gray-800 border-b border-gray-700' : 'bg-white border-b border-gray-200'}`}>
             <div>
               <h2 className={`text-xl font-bold uppercase tracking-wider ${isDarkMode ? 'text-policia-gold' : 'text-policia-green'}`}>
-                {vistaActual === 'inicio' ? 'Centro de Comando' : 
-                 vistaActual === 'activos' ? 'Inventario y Control' : 
-                 vistaActual === 'auditorias' ? 'Auditorías Físicas' : 
-                 vistaActual === 'bitacora' ? 'Bitácora Transaccional' : 
-                 vistaActual === 'reportes' ? 'Centro de Reportes Estratégicos' : 
-                 vistaActual === 'usuarios' ? 'Gestión de Usuarios (RF-11)' : 
-                 'Información del Proyecto'}
+                {vistaActual === 'inicio' ? translations[idioma].comando : 
+                 vistaActual === 'activos' ? translations[idioma].inventario : 
+                 vistaActual === 'auditorias' ? translations[idioma].auditoriasFisicas : 
+                 vistaActual === 'bitacora' ? translations[idioma].bitacoraTransaccional : 
+                 vistaActual === 'reportes' ? translations[idioma].centroReportes : 
+                 vistaActual === 'usuarios' ? translations[idioma].gestionUsuarios : 
+                 translations[idioma].infoProyecto}
               </h2>
             </div>
             
@@ -504,15 +498,32 @@ const Dashboard = ({ onLogout }) => {
 
               {/* Controles de Usuario */}
               <div className="text-right flex flex-col items-end">
-                <select 
-                  value={rolActual}
-                  onChange={(e) => setRolActual(e.target.value)}
-                  className={`font-bold text-sm bg-transparent outline-none cursor-pointer ${isDarkMode ? 'text-white' : 'text-gray-800'}`}
-                >
-                  <option value="Comandante Gral.">Comandante Gral.</option>
-                  <option value="Administrativo">Administrativo</option>
-                  <option value="Auditor">Auditor (Inspectoría)</option>
-                </select>
+                <div className="flex items-center space-x-2 mb-1">
+                  <span className="text-[10px] uppercase font-bold opacity-50">Lang:</span>
+                  <select 
+                    value={idioma}
+                    onChange={(e) => setIdioma(e.target.value)}
+                    className={`text-xs bg-transparent outline-none cursor-pointer border-b border-transparent hover:border-emerald-500 transition-all font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}
+                  >
+                    <option value="es">Español 🇧🇴</option>
+                    <option value="en">English 🇺🇸</option>
+                    <option value="qu">Quechua ⛰️</option>
+                    <option value="ay">Aymara ☀️</option>
+                    <option value="gn">Guaraní 🏹</option>
+                  </select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] uppercase font-bold opacity-50">{translations[idioma].rol}</span>
+                  <select 
+                    value={rolActual}
+                    onChange={(e) => setRolActual(e.target.value)}
+                    className={`font-bold text-sm bg-transparent outline-none cursor-pointer ${isDarkMode ? 'text-white' : 'text-gray-800'}`}
+                  >
+                    <option value="Comandante Gral.">Comandante Gral.</option>
+                    <option value="Administrativo">Administrativo</option>
+                    <option value="Auditor">Auditor (Inspectoría)</option>
+                  </select>
+                </div>
                 <p className={`text-xs uppercase tracking-widest ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   SGE-Activos Central
                 </p>
@@ -524,11 +535,11 @@ const Dashboard = ({ onLogout }) => {
                 </div>
                 {onLogout && (
                   <button 
-                    onClick={onLogout}
+                    onClick={() => setIsLogoutModalOpen(true)}
                     className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors border shadow-sm flex items-center ${isDarkMode ? 'border-red-900 text-red-500 hover:bg-red-900/30' : 'border-red-200 text-red-600 hover:bg-red-50 bg-white'}`}
-                    title="Cerrar Sesión"
+                    title={translations[idioma].salir}
                   >
-                    <span className="mr-1">🚪</span> Salir
+                    <span className="mr-1">🚪</span> {translations[idioma].salir}
                   </button>
                 )}
               </div>
@@ -1657,6 +1668,39 @@ const Dashboard = ({ onLogout }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirmación de Cierre de Sesión */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+          <div className={`rounded-lg shadow-2xl w-full max-w-sm overflow-hidden border-t-4 border-red-500 transition-colors ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className={`px-6 py-4 border-b flex justify-between items-center ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <h3 className="text-lg font-bold text-red-500 uppercase flex items-center"><span className="mr-2">⚠️</span> {translations[idioma].atencion}</h3>
+              <button onClick={() => setIsLogoutModalOpen(false)} className="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
+            </div>
+            
+            <div className={`p-6 text-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+              <p className={`text-sm mb-6 font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {translations[idioma].seguroSalir}
+              </p>
+
+              <div className="flex justify-center space-x-4">
+                <button 
+                  onClick={onLogout}
+                  className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold text-sm uppercase tracking-wider shadow transition-colors"
+                >
+                  {translations[idioma].si}
+                </button>
+                <button 
+                  onClick={() => setIsLogoutModalOpen(false)}
+                  className={`px-6 py-2 font-bold text-sm uppercase tracking-wider rounded border transition-colors ${isDarkMode ? 'text-gray-300 border-gray-600 hover:bg-gray-700' : 'text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                >
+                  {translations[idioma].no}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

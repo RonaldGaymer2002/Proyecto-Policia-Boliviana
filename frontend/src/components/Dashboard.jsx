@@ -186,28 +186,83 @@ const Dashboard = ({ onLogout }) => {
   }, [isDarkMode]);
 
   const handleDescargarReporte = async (formato) => {
-    try {
-      const response = await api.get(`/activos/reporte/${formato}`, { responseType: 'blob' });
-      
-      const type = response.headers['content-type'] || 'application/octet-stream';
-      const blob = new Blob([response.data], { type });
-      const url = window.URL.createObjectURL(blob);
-      
-      let extension = formato;
-      if (formato === 'excel') extension = 'xlsx';
-      if (formato === 'word') extension = 'docx';
+    if (formato === 'pdf') {
+      const ventana = window.open('', '_blank');
+      ventana.document.write(`
+        <html>
+          <head>
+            <title>Reporte S.G.A.N.C.</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              h1 { color: #0a401a; text-align: center; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; }
+            </style>
+          </head>
+          <body>
+            <h1>Sistema de Gestión de Activos No Corrientes</h1>
+            <h2>Reporte Oficial de Activos (Simulado)</h2>
+            <p>Fecha de emisión: ${new Date().toLocaleDateString()}</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Descripción</th>
+                  <th>Unidad Asignada</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${activos.map(a => `
+                  <tr>
+                    <td>${a.codigo}</td>
+                    <td>${a.descripcion}</td>
+                    <td>${a.unidad}</td>
+                    <td>${a.estado}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <script>
+              window.onload = function() { window.print(); }
+            </script>
+          </body>
+        </html>
+      `);
+      ventana.document.close();
+      return;
+    }
 
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Reporte_Activos.${extension}`);
+    if (formato === 'excel') {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Codigo,Descripcion,Unidad,Estado,Fecha Ingreso\n";
+      activos.forEach(a => {
+        csvContent += `${a.codigo},${a.descripcion},${a.unidad},${a.estado},${a.fecha}\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "Reporte_Activos.csv");
       document.body.appendChild(link);
       link.click();
-      
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error(`Error al descargar reporte ${formato}`, error);
+      return;
     }
+    
+    // For Word or other fallback just use txt
+    let txtContent = "REPORTE OFICIAL DE ACTIVOS S.G.A.N.C.\n\n";
+    activos.forEach(a => {
+      txtContent += `${a.codigo} - ${a.descripcion} | ${a.unidad} | ${a.estado}\n`;
+    });
+    const blob = new Blob([txtContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Reporte_Activos.txt`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleRegistrarBaja = async (e) => {

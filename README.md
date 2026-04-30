@@ -9,30 +9,27 @@
 
 ## 📌 Descripción del Proyecto
 
-Desarrollado como proyecto para la asignatura de **Ingeniería de Software** (UTEPSA), este sistema es un **Portal Institucional y Dashboard de Control Táctico** diseñado específicamente para los requerimientos de la Policía Boliviana. 
+**S.G.A.N.C. (Sistema de Gestión de Activos No Corrientes)** es un Portal Institucional y Dashboard de Control Táctico desarrollado para la asignatura de **Ingeniería de Software** (UTEPSA). El sistema está diseñado específicamente para los requerimientos de la Policía Boliviana, centralizando la fiscalización y monitoreo de recursos logísticos nacionales.
 
-El sistema centraliza, fiscaliza y monitorea la distribución de los activos no corrientes (vehículos patrulleros, equipos de radiocomunicación, armamento, motocicletas, etc.) asignados a las diferentes unidades departamentales. Destaca por su inmersiva interfaz gráfica inspirada en centros de comando modernos.
+El sistema destaca por su inmersiva interfaz gráfica inspirada en centros de comando modernos y su arquitectura robusta basada en estándares de ingeniería.
 
 ## 🚀 Características Principales
 
 ### 🖥️ Interfaz y Experiencia de Usuario (UI/UX)
-- **Portal Táctico:** Diseño moderno Cyberpunk-Militar que incluye soporte nativo y fluido para **Dark Mode** (Modo Oscuro) utilizando colores institucionales (Verde Neón y Dorado).
-- **Sidebar Táctico de Comando:** Navegación lateral estructurada que centraliza el acceso rápido a los diferentes módulos del sistema, garantizando fluidez y un estilo inmersivo.
-- **Login Seguro (Uso Oficial):** Pantalla de autenticación con acceso restringido, animaciones de *Glassmorphism* y protección estricta de rutas.
-- **Radar de Monitoreo Animado:** Componente visual interactivo (CSS puro) que simula el escaneo 360° de un radar militar detectando objetivos en tiempo real.
-- **Carga de Imágenes Dinámica e Inteligente:** Las fichas técnicas y las noticias de impacto detectan y cargan imágenes automáticamente (`.png`, `.jpg`, `.jpeg`, `.webp`), estableciendo un icono *placeholder* inteligente si la fotografía no está disponible.
+- **Portal Táctico Dual:** Soporte nativo para **Modo Claro (Default)** y **Modo Oscuro** (Neon Tactical) con una transición fluida y persistencia de estado global.
+- **Soporte Multi-idioma (Inclusión Nacional):** El sistema es totalmente localizable en 5 idiomas: **Español 🇧🇴, Inglés 🇺🇸, Quechua ⛰️, Aymara ☀️ y Guaraní 🏹**, permitiendo una navegación inclusiva para todo el territorio boliviano.
+- **Radar Táctico de Alta Intensidad:** Fondo dinámico en el Login que simula un radar militar de escaneo 360°, con efectos de brillo neón y puntos de rastreo (*blips*) en tiempo real.
+- **Login de Seguridad Institucional:** Pantalla de autenticación con simulación de túnel VPN, efecto de escaneo biométrico y protección estricta de rutas (RBAC).
+- **Sidebar de Comando:** Navegación lateral estructurada que centraliza el acceso rápido a los diferentes módulos (Auditorías, Reportes, Bitácora).
 
 ### 🌐 Conexión en Tiempo Real
 - **Barra de Estado Nacional (Ticker):** Un panel informativo en la cabecera del portal que incluye un reloj de alta precisión (con milisegundos) y una marquesina dinámica conectada a la API de **Open-Meteo** para reportar el estado climático de los 9 departamentos de Bolivia. Incluye sistema de contingencia sin conexión (Offline-Fallback).
 
 ### ⚙️ Arquitectura y Seguridad
-- **Patrones de Arquitectura y Diseño:** El sistema está construido bajo los patrones **MVC (Modelo-Vista-Controlador)** en el frontend/backend y **DAO (Data Access Object)** para asegurar la capa de datos.
-- **Roles y Privilegios (RBAC):** Autenticación y vista adaptativa para 3 roles clave:
-  - *Comandante General* (Acceso Total)
-  - *Administrativo* (Gestión)
-  - *Auditor* (Módulo de Auditorías RF-04 para conciliación físico-contable)
+- **Patrones de Arquitectura y Diseño:** El sistema está construido bajo los patrones **MVC (Modelo-Vista-Controlador)** en el frontend/backend y **Singleton** para asegurar la capa de datos.
+- **Roles y Privilegios (RBAC):** Autenticación y vista adaptativa para 3 roles clave (Comandante General, Administrativo, Auditor).
 - **Generador de Reportes (Patrón Factory):** Aplicación de patrones de diseño de software (*Factory Method*) en el backend para la exportación escalable de padrones (PDF, Excel, Word).
-- **Trazabilidad Inmutable (RF-12):** Implementación de `Triggers` directamente en la estructura de PostgreSQL. El frontend refleja esto mediante un módulo de **Bitácora Inmutable** estilo "Logs de BD" para fiscalizar estrictamente el registro de transacciones (Bajas, Altas, Modificaciones).
+- **Trazabilidad Inmutable (Bitácora RF-12):** Implementación de registros inmutables directamente en la estructura de **PostgreSQL**. El frontend refleja esto mediante un módulo de **Bitácora Transaccional** para fiscalizar estrictamente el registro de transacciones.
 
 ## 🛠️ Tecnologías Utilizadas
 
